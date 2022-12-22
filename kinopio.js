@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.9
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -34,7 +34,7 @@
     let previousCardId = "";
     let isDraggingCardId = "";
     let isResizingCard = false;
-    let lastDetectedCardCount = store.state.currentCards.ids.length;
+    let lastDetectedRemovedCardsCount = store.state.currentCards.removedCards.length;
 
     // ==========================
     // Detect and dispatch events
@@ -49,13 +49,16 @@
         // Detects when card details opens
         previousCardId = currentCardId;
         currentCardId = isCardDetailsOpen.getAttribute("data-card-id");
-        document.dispatchEvent(
-          new CustomEvent("cardEditEnded", {
-            detail: { card: store.state.currentCards.cards[previousCardId] }
-          })
-        );
+        console.log("ZZZ", { previousCardId, currentCardId });
+        if (previousCardId) {
+          document.dispatchEvent(
+            new CustomEvent("cardEditEnded", {
+              detail: { card: store.state.currentCards.cards[previousCardId] }
+            })
+          );
+        }
 
-        currentCard = store.state.currentCards.cards[currentCardId];
+        // currentCard = store.state.currentCards.cards[currentCardId];
         document.dispatchEvent(
           new CustomEvent("cardEditStarted", {
             detail: { card: store.state.currentCards.cards[currentCardId] }
@@ -66,14 +69,18 @@
       if (!isCardDetailsOpen && currentCardId) {
         previousCardId = currentCardId;
         currentCardId = "";
-        document.dispatchEvent(
-          new CustomEvent("cardEditEnded", {
-            detail: { card: store.state.currentCards.cards[previousCardId] }
-          })
-        );
+        console.log("AAA", { previousCardId, currentCardId });
+        if (previousCardId && store.state.currentCards.cards[previousCardId] ) {
+          document.dispatchEvent(
+            new CustomEvent("cardEditEnded", {
+              detail: { card: store.state.currentCards.cards[previousCardId] }
+            })
+          );
+        }
       }
 
       if (!isDraggingCardId && store.state.currentDraggingCardId) {
+        // Card drag started
         isDraggingCardId = store.state.currentDraggingCardId;
 
         // Keep track of where the card started
@@ -98,20 +105,22 @@
         isResizingCard = false;
       }
 
-      if (lastDetectedCardCount > store.state.currentCards.ids.length) {
-        console.log("🎴", lastDetectedCardCount - store.state.currentCards.ids.length , "cards were removed.")
-        document.dispatchEvent(
-          new CustomEvent("cardRemoved", {
-            detail: { card: store.state.currentCards.removedCards[0] },
-          })
-        );
+      if (lastDetectedRemovedCardsCount < store.state.currentCards.removedCards.length) {
+        let cardsRemovedCount = store.state.currentCards.removedCards.length - lastDetectedRemovedCardsCount;
+        console.log("🎴", cardsRemovedCount, "cards were removed.");
+        for (let index = 0; index < cardsRemovedCount; index++) {
+          document.dispatchEvent(
+            new CustomEvent("cardRemoved", {
+              detail: { card: store.state.currentCards.removedCards[index] },
+            })
+          );
+        }
       }
-      lastDetectedCardCount = store.state.currentCards.ids.length;
+      lastDetectedRemovedCardsCount = store.state.currentCards.removedCards.length;
     }, 50);
 
     let resizeBoxes = (card) => {
       if (!card) return;
-      console.log("🎴", "resizing boxes in relation to", card);
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
         if (box.fill === "filled") {
@@ -120,36 +129,58 @@
               card.x < box.x + box.resizeWidth &&
               card.y >= box.y &&
               card.y < box.y + box.resizeHeight) {
-            let cardsInBox = Object.values(store.state.currentCards.cards).filter(
+            console.log("🎴", "resizing", box, "because of", card);
+
+            /*
+            let currentCards = Object.values(store.state.currentCards.cards).filter(
+              (c, index, arr) => {arr.map(mapObj => mapObj.id).indexOf(c.id) === index && !c.hasOwnProperty('type')});
+            */
+            let currentCards = Object.values(store.state.currentCards.cards);
+            let cardsInBox = currentCards.filter(
               c => c.x >= box.x &&
               c.x < box.x + box.resizeWidth &&
               c.y >= box.y &&
               c.y < box.y + box.resizeHeight)
 
+            console.log("🎴", { cardsInBox });
             cardsInBox.sort((a, b) => a.y - b.y)
 
-            // tidy the cards in order of y
-            let x = box.x + 20;
-            let y = box.y + 52;
-            let maxWidth = cardsInBox[0].resizeWidth > 0 ?
-                cardsInBox[0].resizeWidth : cardsInBox[0].width;
-            for (let index = 0; index < cardsInBox.length; index++) {
-              const element = cardsInBox[index];
-              store.dispatch("currentCards/update", {
-                ...element,
-                x: x,
-                y: y,
-              });
-              maxWidth = Math.max(maxWidth,
-                                  element.resizeWidth > 0 ?
-                                  element.resizeWidth : element.width);
-              y += element.height + 12;
+            /*
+            if (store.state.multipleCardsSelectedIds.length > 1) {
+              let otherSelectedCards =
+                  store.state.multipleCardsSelectedIds.map(id => store.state.currentCards.cards[id]);
+              cardsInBox.splice(
+                cardsInBox.findIndex(c => c.id === store.state.multipleCardsSelectedIds[0]),
+                0,
+                ...otherSelectedCards);
             }
-            store.dispatch("currentBoxes/update", {
-              ...box,
-              resizeWidth: maxWidth + 48,
-              resizeHeight: y - box.y + 48,
-            });
+            currentCards = currentCards.filter((c, index, arr) => {arr.map(mapObj => mapObj.id).indexOf(c.id) === index});
+            */
+
+            if (cardsInBox.length > 0) {
+              // tidy the cards in order of y
+              let x = box.x + 20;
+              let y = box.y + 52;
+              let maxWidth = cardsInBox[0].resizeWidth > 0 ?
+                  cardsInBox[0].resizeWidth : cardsInBox[0].width;
+              for (let index = 0; index < cardsInBox.length; index++) {
+                const element = cardsInBox[index];
+                store.dispatch("currentCards/update", {
+                  ...element,
+                  x: x,
+                  y: y,
+                });
+                maxWidth = Math.max(maxWidth,
+                                    element.resizeWidth > 0 ?
+                                    element.resizeWidth : element.width);
+                y += element.height + 12;
+              }
+              store.dispatch("currentBoxes/update", {
+                ...box,
+                resizeWidth: maxWidth + 48,
+                resizeHeight: y - box.y + 48,
+              });
+            }
           }
         } else if (box.fill === "empty") {
           if (
@@ -158,7 +189,7 @@
             card.y + card.height >= box.y &&
             card.y < box.y + box.resizeHeight
           ) {
-
+            console.log("🎴", "resizing", box, "because of", card);
             if (
               card.x + (card.resizeWidth ? card.resizeWidth : card.width) >
               box.x + box.resizeWidth - 24
@@ -236,9 +267,14 @@
     });
 
     document.addEventListener("cardDragEnded", (e) => {
+      console.log("🎴", e.type, currentCard, "was dragged");
+      // This intends to provoke resize logic for when a card is dragged out of a box.
+      // `currentCard` is tracking where the dragged card originated.
+      resizeBoxes(currentCard);
+
+      // This detects when a card was dragged in
       console.log("🎴", e.type, e.detail.card.id);
       resizeBoxes(e.detail.card);
-      resizeBoxes(currentCard);
       currentCard = {};
     });
     document.addEventListener("cardResizeEnded", (e) => {
