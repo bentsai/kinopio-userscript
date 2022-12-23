@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -72,10 +72,7 @@
       if (!isCardDetailsOpen && currentCardId) {
         previousCardId = currentCardId;
         currentCardId = "";
-        if (
-          previousCardId &&
-          store.state.currentCards.cards[previousCardId]
-        ) {
+        if (previousCardId && store.state.currentCards.cards[previousCardId]) {
           document.dispatchEvent(
             new CustomEvent("cardEditEnded", {
               detail: {
@@ -147,6 +144,7 @@
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
         if (box.fill === "filled") {
+          let yMargin = 12;
           // if card is inside box
           if (
             card.x >= box.x &&
@@ -156,9 +154,7 @@
           ) {
             console.log("🎴", "resizing", box.id, box.name, "because of", card);
 
-            let currentCards = Object.values(
-              store.state.currentCards.cards
-            );
+            let currentCards = Object.values(store.state.currentCards.cards);
             let cardsInBox = currentCards.filter(
               (c) =>
                 c.x >= box.x &&
@@ -203,10 +199,7 @@
               // tidy the cards in order of y
               let x = box.x + 20;
               let y = box.y + 52;
-              let maxWidth =
-                cardsInBox[0].resizeWidth > 0
-                  ? cardsInBox[0].resizeWidth
-                  : cardsInBox[0].width;
+              let maxWidth = cardsInBox[0].width;
               for (let index = 0; index < cardsInBox.length; index++) {
                 const element = cardsInBox[index];
                 store.dispatch("currentCards/update", {
@@ -214,11 +207,8 @@
                   x: x,
                   y: y,
                 });
-                maxWidth = Math.max(
-                  maxWidth,
-                  element.resizeWidth > 0 ? element.resizeWidth : element.width
-                );
-                y += element.height + 12;
+                maxWidth = Math.max(maxWidth, element.width);
+                y += element.height + yMargin;
               }
               store.dispatch("currentBoxes/update", {
                 ...box,
@@ -229,21 +219,17 @@
           }
         } else if (box.fill === "empty") {
           if (
-            card.x + (card.resizeWidth ?? card.width) >= box.x &&
+            card.x + card.width >= box.x &&
             card.x < box.x + box.resizeWidth &&
             card.y + card.height >= box.y &&
             card.y < box.y + box.resizeHeight
           ) {
             console.log("🎴", "resizing", box, "because of", card);
-            if (
-              card.x + (card.resizeWidth ? card.resizeWidth : card.width) >
-              box.x + box.resizeWidth - 24
-            ) {
+            if (card.x + card.width > box.x + box.resizeWidth - 24) {
               // Handle east
               store.dispatch("currentBoxes/update", {
                 ...box,
-                resizeWidth:
-                  card.x + (card.resizeWidth ?? card.width) + 48 - box.x,
+                resizeWidth: card.x + card.width + 48 - box.x,
               });
             }
             if (card.y + card.height > box.y + box.resizeHeight - 24) {
