@@ -14,7 +14,7 @@
 
   let toggleChrome = () => {
     const display =
-          document.querySelector("header").style.display === "none" ? "" : "none";
+      document.querySelector("header").style.display === "none" ? "" : "none";
     document.querySelector("header").style.display = display;
     document.querySelector("footer").style.display = display;
     document.querySelector(".footer-wrap").style.display = display;
@@ -27,7 +27,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     let store =
-        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+      document.querySelector("#app").__vue_app__.config.globalProperties.$store;
 
     let currentCardId = "";
     let originCard = {};
@@ -35,7 +35,7 @@
     let isDraggingCardId = "";
     let isResizingCard = false;
     let lastDetectedRemovedCardsCount =
-        store.state.currentCards.removedCards.length;
+      store.state.currentCards.removedCards.length;
 
     // ==========================
     // Detect and dispatch events
@@ -72,10 +72,7 @@
       if (!isCardDetailsOpen && currentCardId) {
         previousCardId = currentCardId;
         currentCardId = "";
-        if (
-          previousCardId &&
-          store.state.currentCards.cards[previousCardId]
-        ) {
+        if (previousCardId && store.state.currentCards.cards[previousCardId]) {
           document.dispatchEvent(
             new CustomEvent("cardEditEnded", {
               detail: {
@@ -125,8 +122,8 @@
         store.state.currentCards.removedCards.length
       ) {
         let cardsRemovedCount =
-            store.state.currentCards.removedCards.length -
-            lastDetectedRemovedCardsCount;
+          store.state.currentCards.removedCards.length -
+          lastDetectedRemovedCardsCount;
         console.log("🎴", cardsRemovedCount, "cards were removed.");
         for (let index = 0; index < cardsRemovedCount; index++) {
           document.dispatchEvent(
@@ -157,15 +154,13 @@
           ) {
             console.log("🎴", "resizing", box.id, box.name, "because of", card);
 
-            let currentCards = Object.values(
-              store.state.currentCards.cards
-            );
+            let currentCards = Object.values(store.state.currentCards.cards);
             let cardsInBox = currentCards.filter(
               (c) =>
-              c.x >= box.x &&
-              c.x < box.x + box.resizeWidth &&
-              c.y >= box.y &&
-              c.y < box.y + box.resizeHeight
+                c.x >= box.x &&
+                c.x < box.x + box.resizeWidth &&
+                c.y >= box.y &&
+                c.y < box.y + box.resizeHeight
             );
 
             cardsInBox.sort((a, b) => a.y - b.y);
@@ -177,9 +172,9 @@
 
               if (draggedCardIndex >= 0) {
                 let otherSelectedCards =
-                    store.state.multipleCardsSelectedIds.map(
-                      (id) => store.state.currentCards.cards[id]
-                    );
+                  store.state.multipleCardsSelectedIds.map(
+                    (id) => store.state.currentCards.cards[id]
+                  );
                 otherSelectedCards = otherSelectedCards.filter(
                   (c) => c.id !== store.state.multipleCardsSelectedIds[0]
                 );
@@ -234,8 +229,7 @@
               // Handle east
               store.dispatch("currentBoxes/update", {
                 ...box,
-                resizeWidth:
-                card.x + card.width + 48 - box.x,
+                resizeWidth: card.x + card.width + 48 - box.x,
               });
             }
             if (card.y + card.height > box.y + box.resizeHeight - 24) {
@@ -292,10 +286,10 @@
                 store.state.currentCards.cards
               ).find(
                 (c) =>
-                c.x >= box.x &&
-                c.x < box.x + box.resizeWidth &&
-                c.y >= box.y &&
-                c.y < box.y + box.resizeHeight
+                  c.x >= box.x &&
+                  c.x < box.x + box.resizeWidth &&
+                  c.y >= box.y &&
+                  c.y < box.y + box.resizeHeight
               );
               resizeBoxes(store.state.currentCards.cards[otherCard.id]);
             }
