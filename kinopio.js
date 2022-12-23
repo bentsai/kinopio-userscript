@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -14,7 +14,7 @@
 
   let toggleChrome = () => {
     const display =
-      document.querySelector("header").style.display === "none" ? "" : "none";
+          document.querySelector("header").style.display === "none" ? "" : "none";
     document.querySelector("header").style.display = display;
     document.querySelector("footer").style.display = display;
     document.querySelector(".footer-wrap").style.display = display;
@@ -27,7 +27,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     let store =
-      document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
 
     let currentCardId = "";
     let originCard = {};
@@ -35,7 +35,7 @@
     let isDraggingCardId = "";
     let isResizingCard = false;
     let lastDetectedRemovedCardsCount =
-      store.state.currentCards.removedCards.length;
+        store.state.currentCards.removedCards.length;
 
     // ==========================
     // Detect and dispatch events
@@ -125,8 +125,8 @@
         store.state.currentCards.removedCards.length
       ) {
         let cardsRemovedCount =
-          store.state.currentCards.removedCards.length -
-          lastDetectedRemovedCardsCount;
+            store.state.currentCards.removedCards.length -
+            lastDetectedRemovedCardsCount;
         console.log("🎴", cardsRemovedCount, "cards were removed.");
         for (let index = 0; index < cardsRemovedCount; index++) {
           document.dispatchEvent(
@@ -147,6 +147,7 @@
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
         if (box.fill === "filled") {
+          let yMargin = 12;
           // if card is inside box
           if (
             card.x >= box.x &&
@@ -161,10 +162,10 @@
             );
             let cardsInBox = currentCards.filter(
               (c) =>
-                c.x >= box.x &&
-                c.x < box.x + box.resizeWidth &&
-                c.y >= box.y &&
-                c.y < box.y + box.resizeHeight
+              c.x >= box.x &&
+              c.x < box.x + box.resizeWidth &&
+              c.y >= box.y &&
+              c.y < box.y + box.resizeHeight
             );
 
             cardsInBox.sort((a, b) => a.y - b.y);
@@ -176,9 +177,9 @@
 
               if (draggedCardIndex >= 0) {
                 let otherSelectedCards =
-                  store.state.multipleCardsSelectedIds.map(
-                    (id) => store.state.currentCards.cards[id]
-                  );
+                    store.state.multipleCardsSelectedIds.map(
+                      (id) => store.state.currentCards.cards[id]
+                    );
                 otherSelectedCards = otherSelectedCards.filter(
                   (c) => c.id !== store.state.multipleCardsSelectedIds[0]
                 );
@@ -203,10 +204,7 @@
               // tidy the cards in order of y
               let x = box.x + 20;
               let y = box.y + 52;
-              let maxWidth =
-                cardsInBox[0].resizeWidth > 0
-                  ? cardsInBox[0].resizeWidth
-                  : cardsInBox[0].width;
+              let maxWidth = cardsInBox[0].width;
               for (let index = 0; index < cardsInBox.length; index++) {
                 const element = cardsInBox[index];
                 store.dispatch("currentCards/update", {
@@ -214,11 +212,8 @@
                   x: x,
                   y: y,
                 });
-                maxWidth = Math.max(
-                  maxWidth,
-                  element.resizeWidth > 0 ? element.resizeWidth : element.width
-                );
-                y += element.height + 12;
+                maxWidth = Math.max(maxWidth, element.width);
+                y += element.height + yMargin;
               }
               store.dispatch("currentBoxes/update", {
                 ...box,
@@ -229,21 +224,18 @@
           }
         } else if (box.fill === "empty") {
           if (
-            card.x + (card.resizeWidth ?? card.width) >= box.x &&
+            card.x + card.width >= box.x &&
             card.x < box.x + box.resizeWidth &&
             card.y + card.height >= box.y &&
             card.y < box.y + box.resizeHeight
           ) {
             console.log("🎴", "resizing", box, "because of", card);
-            if (
-              card.x + (card.resizeWidth ? card.resizeWidth : card.width) >
-              box.x + box.resizeWidth - 24
-            ) {
+            if (card.x + card.width > box.x + box.resizeWidth - 24) {
               // Handle east
               store.dispatch("currentBoxes/update", {
                 ...box,
                 resizeWidth:
-                  card.x + (card.resizeWidth ?? card.width) + 48 - box.x,
+                card.x + card.width + 48 - box.x,
               });
             }
             if (card.y + card.height > box.y + box.resizeHeight - 24) {
@@ -300,10 +292,10 @@
                 store.state.currentCards.cards
               ).find(
                 (c) =>
-                  c.x >= box.x &&
-                  c.x < box.x + box.resizeWidth &&
-                  c.y >= box.y &&
-                  c.y < box.y + box.resizeHeight
+                c.x >= box.x &&
+                c.x < box.x + box.resizeWidth &&
+                c.y >= box.y &&
+                c.y < box.y + box.resizeHeight
               );
               resizeBoxes(store.state.currentCards.cards[otherCard.id]);
             }
