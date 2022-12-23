@@ -1,2 +1,27 @@
-# kinopio-userscript
+# A Kinopio userscript
+
 A userscript for experimenting with Kinopio interactions
+
+## Main features:
+
+### Keyboard shortcuts
+
+- Hide UI chrome with keyboard shortcut `d` (useful for presentations)
+
+### Auto-resizing lists
+
+Boxes with a background fill have an auto-tidying list behavior.
+
+- Cards inside are auto-aligned.
+- You can rearrange cards by dragging.
+- Box will resize according to contents (enlarges/contracts if you add/remove cards).
+- If you select cards and drag them in, your cards will be inserted at the point that you drop them.
+- Dragging out, removing cards should cause list to tidy.
+
+### Auto-expanding boxes
+
+Boxes with an empty background have an auto-expand behavior.
+
+- When cards get near the box boundaries, the box will expand in that direction.
+- This happens when you create or drag cards near the boundaries.
+- It only grows—does not contract.
