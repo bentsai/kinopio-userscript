@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -14,7 +14,7 @@
 
   let toggleChrome = () => {
     const display =
-      document.querySelector("header").style.display === "none" ? "" : "none";
+          document.querySelector("header").style.display === "none" ? "" : "none";
     document.querySelector("header").style.display = display;
     document.querySelector("footer").style.display = display;
     document.querySelector(".footer-wrap").style.display = display;
@@ -27,7 +27,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     let store =
-      document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
 
     let currentCardId = "";
     let originCard = {};
@@ -35,7 +35,8 @@
     let isDraggingCardId = "";
     let isResizingCard = false;
     let lastDetectedRemovedCardsCount =
-      store.state.currentCards.removedCards.length;
+        store.state.currentCards.removedCards.length;
+    let lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
 
     // ==========================
     // Detect and dispatch events
@@ -50,11 +51,23 @@
         // Detects when card details opens
         previousCardId = currentCardId;
         currentCardId = isCardDetailsOpen.getAttribute("data-card-id");
+
         if (previousCardId) {
           document.dispatchEvent(
             new CustomEvent("cardEditEnded", {
               detail: {
-                card: store.state.curentCards.cards[previousCardId],
+                card: store.state.currentCards.cards[previousCardId],
+              },
+            })
+          );
+        }
+        if (
+          lastDetectedCurrentCardsCount < store.state.currentCards.ids.length
+        ) {
+          document.dispatchEvent(
+            new CustomEvent("newCardEdited", {
+              detail: {
+                card: store.state.currentCards.cards[currentCardId],
               },
             })
           );
@@ -122,8 +135,8 @@
         store.state.currentCards.removedCards.length
       ) {
         let cardsRemovedCount =
-          store.state.currentCards.removedCards.length -
-          lastDetectedRemovedCardsCount;
+            store.state.currentCards.removedCards.length -
+            lastDetectedRemovedCardsCount;
         console.log("🎴", cardsRemovedCount, "cards were removed.");
         for (let index = 0; index < cardsRemovedCount; index++) {
           document.dispatchEvent(
@@ -135,8 +148,10 @@
           );
         }
       }
+
       lastDetectedRemovedCardsCount =
         store.state.currentCards.removedCards.length;
+      lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
     }, 50);
 
     let resizeBoxes = (card) => {
@@ -157,10 +172,10 @@
             let currentCards = Object.values(store.state.currentCards.cards);
             let cardsInBox = currentCards.filter(
               (c) =>
-                c.x >= box.x &&
-                c.x < box.x + box.resizeWidth &&
-                c.y >= box.y &&
-                c.y < box.y + box.resizeHeight
+              c.x >= box.x &&
+              c.x < box.x + box.resizeWidth &&
+              c.y >= box.y &&
+              c.y < box.y + box.resizeHeight
             );
 
             cardsInBox.sort((a, b) => a.y - b.y);
@@ -172,9 +187,9 @@
 
               if (draggedCardIndex >= 0) {
                 let otherSelectedCards =
-                  store.state.multipleCardsSelectedIds.map(
-                    (id) => store.state.currentCards.cards[id]
-                  );
+                    store.state.multipleCardsSelectedIds.map(
+                      (id) => store.state.currentCards.cards[id]
+                    );
                 otherSelectedCards = otherSelectedCards.filter(
                   (c) => c.id !== store.state.multipleCardsSelectedIds[0]
                 );
@@ -262,6 +277,17 @@
     // Event handlers
     // ==============
 
+    document.addEventListener("newCardEdited", (e) => {
+      console.log("🎴", e.type, e.detail.card.id);
+      if (previousCardId) {
+        let previousCard = store.state.currentCards.cards[previousCardId];
+        store.dispatch("currentCards/update", {
+          ...e.detail.card,
+          resizeWidth: Math.max(e.detail.card.width, previousCard.width),
+        });
+      }
+    });
+
     document.addEventListener("cardEditStarted", (e) => {
       console.log("🎴", e.type, e.detail.card.id);
       resizeBoxes(e.detail.card);
@@ -286,10 +312,10 @@
                 store.state.currentCards.cards
               ).find(
                 (c) =>
-                  c.x >= box.x &&
-                  c.x < box.x + box.resizeWidth &&
-                  c.y >= box.y &&
-                  c.y < box.y + box.resizeHeight
+                c.x >= box.x &&
+                c.x < box.x + box.resizeWidth &&
+                c.y >= box.y &&
+                c.y < box.y + box.resizeHeight
               );
               resizeBoxes(store.state.currentCards.cards[otherCard.id]);
             }
