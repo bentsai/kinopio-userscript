@@ -7,6 +7,7 @@ A userscript for experimenting with Kinopio interactions
 ### Keyboard shortcuts
 
 - Hide UI chrome with keyboard shortcut `d` (useful for presentations)
+- 'l' to toggle viewing cards as a list (wonky because of perf optimization)
 
 ### Auto-resizing lists
 
