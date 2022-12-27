@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -12,9 +12,40 @@
 (function () {
   "use strict";
 
+  let cardsAsListCssStyleEl = document.createElement("style");
+  cardsAsListCssStyleEl.id = "cards-as-list";
+  cardsAsListCssStyleEl.type = "text/css";
+  cardsAsListCssStyleEl.innerHTML = `
+  article {
+    position: static;
+    padding: 5px;
+    margin-left: 300px;
+    max-width: 600px;
+}
+
+article .card {
+    max-width: none;
+}
+
+.card-overlap-indicator {
+    display: none;
+}
+`;
+
+  let toggleCardsAsList = () => {
+    let style = document.getElementById("cards-as-list");
+    if (style) {
+      style.remove();
+      return;
+    }
+    let head = document.getElementsByTagName("head")[0];
+    if (!head) return;
+    head.appendChild(cardsAsListCssStyleEl);
+  };
+
   let toggleChrome = () => {
     const display =
-          document.querySelector("header").style.display === "none" ? "" : "none";
+      document.querySelector("header").style.display === "none" ? "" : "none";
     document.querySelector("header").style.display = display;
     document.querySelector("footer").style.display = display;
     document.querySelector(".footer-wrap").style.display = display;
@@ -23,11 +54,12 @@
   document.body.addEventListener("keydown", (e) => {
     if (document.querySelector("dialog[open]")) return;
     if (e.key === "d") toggleChrome();
+    if (e.key === "l") toggleCardsAsList();
   });
 
   document.addEventListener("DOMContentLoaded", function () {
     let store =
-        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+      document.querySelector("#app").__vue_app__.config.globalProperties.$store;
 
     let currentCardId = "";
     let originCard = {};
@@ -35,7 +67,7 @@
     let isDraggingCardId = "";
     let isResizingCard = false;
     let lastDetectedRemovedCardsCount =
-        store.state.currentCards.removedCards.length;
+      store.state.currentCards.removedCards.length;
     let lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
 
     // ==========================
@@ -43,6 +75,13 @@
     // ==========================
     let intervalId = setInterval(() => {
       let isCardDetailsOpen = document.querySelector(".card-details");
+      let isMultipleDialogOpen = document.querySelector(
+        ".multiple-selected-actions[open]"
+      );
+
+      if (isMultipleDialogOpen) {
+        console.log("It's open");
+      }
 
       if (
         isCardDetailsOpen &&
@@ -135,8 +174,8 @@
         store.state.currentCards.removedCards.length
       ) {
         let cardsRemovedCount =
-            store.state.currentCards.removedCards.length -
-            lastDetectedRemovedCardsCount;
+          store.state.currentCards.removedCards.length -
+          lastDetectedRemovedCardsCount;
         console.log("🎴", cardsRemovedCount, "cards were removed.");
         for (let index = 0; index < cardsRemovedCount; index++) {
           document.dispatchEvent(
@@ -172,10 +211,10 @@
             let currentCards = Object.values(store.state.currentCards.cards);
             let cardsInBox = currentCards.filter(
               (c) =>
-              c.x >= box.x &&
-              c.x < box.x + box.resizeWidth &&
-              c.y >= box.y &&
-              c.y < box.y + box.resizeHeight
+                c.x >= box.x &&
+                c.x < box.x + box.resizeWidth &&
+                c.y >= box.y &&
+                c.y < box.y + box.resizeHeight
             );
 
             cardsInBox.sort((a, b) => a.y - b.y);
@@ -187,9 +226,9 @@
 
               if (draggedCardIndex >= 0) {
                 let otherSelectedCards =
-                    store.state.multipleCardsSelectedIds.map(
-                      (id) => store.state.currentCards.cards[id]
-                    );
+                  store.state.multipleCardsSelectedIds.map(
+                    (id) => store.state.currentCards.cards[id]
+                  );
                 otherSelectedCards = otherSelectedCards.filter(
                   (c) => c.id !== store.state.multipleCardsSelectedIds[0]
                 );
@@ -312,10 +351,10 @@
                 store.state.currentCards.cards
               ).find(
                 (c) =>
-                c.x >= box.x &&
-                c.x < box.x + box.resizeWidth &&
-                c.y >= box.y &&
-                c.y < box.y + box.resizeHeight
+                  c.x >= box.x &&
+                  c.x < box.x + box.resizeWidth &&
+                  c.y >= box.y &&
+                  c.y < box.y + box.resizeHeight
               );
               resizeBoxes(store.state.currentCards.cards[otherCard.id]);
             }
