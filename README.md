@@ -25,3 +25,8 @@ Boxes with an empty background have an auto-expand behavior.
 - When cards get near the box boundaries, the box will expand in that direction.
 - This happens when you create or drag cards near the boundaries.
 - It only grows—does not contract.
+
+### New cards
+
+When you create a new card by hitting Enter on an existing card, the new card now inherits
+the size of the existing card.
