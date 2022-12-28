@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -60,6 +60,11 @@ article .card {
   document.addEventListener("DOMContentLoaded", function () {
     let store =
       document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+
+    store.commit("addNotification", {
+      message: "Thanks for running Ben's Kinopio userscript!",
+      type: "info",
+    });
 
     let currentCardId = "";
     let originCard = {};
@@ -322,7 +327,7 @@ article .card {
         let previousCard = store.state.currentCards.cards[previousCardId];
         store.dispatch("currentCards/update", {
           ...e.detail.card,
-          resizeWidth: Math.max(e.detail.card.width, previousCard.width),
+          resizeWidth: previousCard.resizeWidth,
         });
       }
     });
