@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -83,10 +83,6 @@ article .card {
       let isMultipleDialogOpen = document.querySelector(
         ".multiple-selected-actions[open]"
       );
-
-      if (isMultipleDialogOpen) {
-        console.log("It's open");
-      }
 
       if (
         isCardDetailsOpen &&
