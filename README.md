@@ -1,4 +1,4 @@
-# A Kinopio userscript
+# Ben’s Kinopio userscript
 
 A userscript for experimenting with Kinopio interactions
 
@@ -31,3 +31,7 @@ Boxes with an empty background have an auto-expand behavior.
 
 When you create a new card by hitting Enter on an existing card, the new card now inherits
 the size of the existing card.
+
+### Fixes
+
+- Fixes cursor when resizing boxes (https://club.kinopio.club/t/boxes-resize-cursor-should-be-nwse-cursor/1004)
