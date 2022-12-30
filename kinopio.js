@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -12,25 +12,35 @@
 (function () {
   "use strict";
 
+  let cssOverridesEl = document.createElement("style");
+  cssOverridesEl.id = "css-overrides";
+  cssOverridesEl.type = "text/css";
+  cssOverridesEl.innerHTML = `
+.box .bottom-button-wrap .resize-button-wrap {
+  cursor: nwse-resize;
+}
+.box .bottom-button-wrap .resize-button-wrap button {
+  cursor: nwse-resize;
+}`;
+
   let cardsAsListCssStyleEl = document.createElement("style");
   cardsAsListCssStyleEl.id = "cards-as-list";
   cardsAsListCssStyleEl.type = "text/css";
   cardsAsListCssStyleEl.innerHTML = `
-  article {
-    position: static;
-    padding: 5px;
-    margin-left: 300px;
-    max-width: 600px;
+article {
+  position: static;
+  padding: 5px;
+  margin-left: 300px;
+  max-width: 600px;
 }
 
 article .card {
-    max-width: none;
+  max-width: none;
 }
 
 .card-overlap-indicator {
-    display: none;
-}
-`;
+  display: none;
+}`;
 
   let toggleCardsAsList = () => {
     let style = document.getElementById("cards-as-list");
@@ -65,6 +75,11 @@ article .card {
       message: "Thanks for running Ben's Kinopio userscript!",
       type: "info",
     });
+
+    let head = document.getElementsByTagName("head")[0];
+    if (head) {
+      head.appendChild(cssOverridesEl);
+    }
 
     let currentCardId = "";
     let originCard = {};
