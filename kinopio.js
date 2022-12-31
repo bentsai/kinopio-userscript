@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -16,31 +16,31 @@
   cssOverridesEl.id = "css-overrides";
   cssOverridesEl.type = "text/css";
   cssOverridesEl.innerHTML = `
-.box .bottom-button-wrap .resize-button-wrap {
-  cursor: nwse-resize;
-}
-.box .bottom-button-wrap .resize-button-wrap button {
-  cursor: nwse-resize;
-}`;
+    .box .bottom-button-wrap .resize-button-wrap {
+      cursor: nwse-resize;
+    }
+    .box .bottom-button-wrap .resize-button-wrap button {
+      cursor: nwse-resize;
+    }`;
 
   let cardsAsListCssStyleEl = document.createElement("style");
   cardsAsListCssStyleEl.id = "cards-as-list";
   cardsAsListCssStyleEl.type = "text/css";
   cardsAsListCssStyleEl.innerHTML = `
-article {
-  position: static;
-  padding: 5px;
-  margin-left: 300px;
-  max-width: 600px;
-}
-
-article .card {
-  max-width: none;
-}
-
-.card-overlap-indicator {
-  display: none;
-}`;
+    article {
+      position: static;
+      padding: 5px;
+      margin-left: 300px;
+      max-width: 600px;
+    }
+  
+    article .card {
+      max-width: none;
+    }
+  
+    .card-overlap-indicator {
+      display: none;
+    }`;
 
   let toggleCardsAsList = () => {
     let style = document.getElementById("cards-as-list");
@@ -73,7 +73,7 @@ article .card {
 
     store.commit("addNotification", {
       message: "Thanks for running Ben's Kinopio userscript!",
-      type: "info",
+      type: "success",
     });
 
     let head = document.getElementsByTagName("head")[0];
@@ -89,15 +89,28 @@ article .card {
     let lastDetectedRemovedCardsCount =
       store.state.currentCards.removedCards.length;
     let lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
+    let lastDetectedMultipleDialogOpen = false;
 
     // ==========================
     // Detect and dispatch events
     // ==========================
     let intervalId = setInterval(() => {
       let isCardDetailsOpen = document.querySelector(".card-details");
-      let isMultipleDialogOpen = document.querySelector(
-        ".multiple-selected-actions[open]"
-      );
+
+      if (
+        !lastDetectedMultipleDialogOpen &&
+        store.state.multipleSelectedActionsIsVisible
+      ) {
+        document.dispatchEvent(new CustomEvent("multipleSelectedDialogOpened"));
+        lastDetectedMultipleDialogOpen = true;
+      }
+      if (
+        lastDetectedMultipleDialogOpen &&
+        !store.state.multipleSelectedActionsIsVisible
+      ) {
+        document.dispatchEvent(new CustomEvent("multipleSelectedDialogClosed"));
+        lastDetectedMultipleDialogOpen = false;
+      }
 
       if (
         isCardDetailsOpen &&
@@ -404,6 +417,29 @@ article .card {
     document.addEventListener("cardRemoved", (e) => {
       console.log("🎴", e.type, e.detail.card.id);
       resizeBoxes(e.detail.card);
+    });
+
+    document.addEventListener("multipleSelectedDialogOpened", (e) => {
+      console.log("🎴", e.type);
+      if (store.state.multipleCardsSelectedIds.length > 0) {
+        let message =
+          store.state.multipleCardsSelectedIds.length === 1
+            ? "1 card selected"
+            : `${store.state.multipleCardsSelectedIds.length} cards selected`;
+        store.commit("addNotification", {
+          message: message,
+          type: "info",
+        });
+      } else if (store.state.multipleConnectionsSelectedIds.length > 0) {
+        let message =
+          store.state.multipleConnectionsSelectedIds.length === 1
+            ? "1 connection selected"
+            : `${store.state.multipleConnectionsSelectedIds.length} connections selected`;
+        store.commit("addNotification", {
+          message: message,
+          type: "info",
+        });
+      }
     });
   });
 })();
