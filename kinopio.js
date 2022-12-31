@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.6
+// @version      1.7
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -213,6 +213,9 @@ article .card {
       if (!card) return;
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
+        if (box.isLocked) {
+          return;
+        }
         if (box.fill === "filled") {
           let yMargin = 12;
           // if card is inside box
