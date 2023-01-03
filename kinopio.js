@@ -182,12 +182,13 @@
     }, 50);
 
     let resizeBoxes = (card) => {
-      if (
+      if (store.state.currentSpace.userId !== store.state.currentUser.id &&
         !store.state.currentSpace.collaborators.includes(
           store.state.currentUser.id
         )
-      )
+      ) {
         return;
+      }
       if (!card) return;
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
