@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      1.9
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -33,11 +33,11 @@
       margin-left: 300px;
       max-width: 600px;
     }
-  
+
     article .card {
       max-width: none;
     }
-  
+
     .card-overlap-indicator {
       display: none;
     }`;
@@ -55,21 +55,28 @@
 
   let toggleChrome = () => {
     const display =
-      document.querySelector("header").style.display === "none" ? "" : "none";
+          document.querySelector("header").style.display === "none" ? "" : "none";
     document.querySelector("header").style.display = display;
     document.querySelector("footer").style.display = display;
     document.querySelector(".footer-wrap").style.display = display;
   };
 
+  let isResizingToMax = false;
+
   document.body.addEventListener("keydown", (e) => {
-    if (document.querySelector("dialog[open]")) return;
+    let store =
+        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+    if (store.state.cardDetailsIsVisibleForCardId) return;
+    if (store.state.multipleCardsSelectedIds.length) {
+      if (e.key === "r") isResizingToMax = true;
+    }
     if (e.key === "d") toggleChrome();
     if (e.key === "l") toggleCardsAsList();
   });
 
   document.addEventListener("DOMContentLoaded", function () {
     let store =
-      document.querySelector("#app").__vue_app__.config.globalProperties.$store;
+        document.querySelector("#app").__vue_app__.config.globalProperties.$store;
 
     store.commit("addNotification", {
       message: "Thanks for running Ben's Kinopio userscript!",
@@ -87,7 +94,7 @@
     let isDraggingCardId = "";
     let isResizingCard = false;
     let lastDetectedRemovedCardsCount =
-      store.state.currentCards.removedCards.length;
+        store.state.currentCards.removedCards.length;
     let lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
     let lastDetectedMultipleDialogOpen = false;
 
@@ -96,6 +103,26 @@
     // ==========================
     let intervalId = setInterval(() => {
       let isCardDetailsOpen = document.querySelector(".card-details");
+
+      if (isResizingToMax) {
+        console.log("🎴", "resizing", store.state.multipleCardsSelectedIds);
+        let numDone = 0
+        store.state.multipleCardsSelectedIds.forEach(id => {
+          let card = store.state.currentCards.cards[id];
+          if (card === "undefined") return;
+          if (card.height > 32) {
+            store.dispatch("currentCards/update", {
+              ...card,
+              resizeWidth: card.width + 12,
+            });
+          } else {
+            numDone += 1;
+          }
+        });
+        if (store.state.multipleCardsSelectedIds.length === numDone) {
+          isResizingToMax = false;
+        }
+      }
 
       if (
         !lastDetectedMultipleDialogOpen &&
@@ -203,8 +230,8 @@
         store.state.currentCards.removedCards.length
       ) {
         let cardsRemovedCount =
-          store.state.currentCards.removedCards.length -
-          lastDetectedRemovedCardsCount;
+            store.state.currentCards.removedCards.length -
+            lastDetectedRemovedCardsCount;
         console.log("🎴", cardsRemovedCount, "cards were removed.");
         for (let index = 0; index < cardsRemovedCount; index++) {
           document.dispatchEvent(
@@ -220,7 +247,7 @@
       lastDetectedRemovedCardsCount =
         store.state.currentCards.removedCards.length;
       lastDetectedCurrentCardsCount = store.state.currentCards.ids.length;
-    }, 50);
+    }, 25);
 
     let resizeBoxes = (card) => {
       if (!card) return;
@@ -243,10 +270,10 @@
             let currentCards = Object.values(store.state.currentCards.cards);
             let cardsInBox = currentCards.filter(
               (c) =>
-                c.x >= box.x &&
-                c.x < box.x + box.resizeWidth &&
-                c.y >= box.y &&
-                c.y < box.y + box.resizeHeight
+              c.x >= box.x &&
+              c.x < box.x + box.resizeWidth &&
+              c.y >= box.y &&
+              c.y < box.y + box.resizeHeight
             );
 
             cardsInBox.sort((a, b) => a.y - b.y);
@@ -258,9 +285,9 @@
 
               if (draggedCardIndex >= 0) {
                 let otherSelectedCards =
-                  store.state.multipleCardsSelectedIds.map(
-                    (id) => store.state.currentCards.cards[id]
-                  );
+                    store.state.multipleCardsSelectedIds.map(
+                      (id) => store.state.currentCards.cards[id]
+                    );
                 otherSelectedCards = otherSelectedCards.filter(
                   (c) => c.id !== store.state.multipleCardsSelectedIds[0]
                 );
@@ -383,10 +410,10 @@
                 store.state.currentCards.cards
               ).find(
                 (c) =>
-                  c.x >= box.x &&
-                  c.x < box.x + box.resizeWidth &&
-                  c.y >= box.y &&
-                  c.y < box.y + box.resizeHeight
+                c.x >= box.x &&
+                c.x < box.x + box.resizeWidth &&
+                c.y >= box.y &&
+                c.y < box.y + box.resizeHeight
               );
               resizeBoxes(store.state.currentCards.cards[otherCard.id]);
             }
@@ -423,18 +450,18 @@
       console.log("🎴", e.type);
       if (store.state.multipleCardsSelectedIds.length > 0) {
         let message =
-          store.state.multipleCardsSelectedIds.length === 1
-            ? "1 card selected"
-            : `${store.state.multipleCardsSelectedIds.length} cards selected`;
+            store.state.multipleCardsSelectedIds.length === 1
+        ? "1 card selected"
+        : `${store.state.multipleCardsSelectedIds.length} cards selected`;
         store.commit("addNotification", {
           message: message,
           type: "info",
         });
       } else if (store.state.multipleConnectionsSelectedIds.length > 0) {
         let message =
-          store.state.multipleConnectionsSelectedIds.length === 1
-            ? "1 connection selected"
-            : `${store.state.multipleConnectionsSelectedIds.length} connections selected`;
+            store.state.multipleConnectionsSelectedIds.length === 1
+        ? "1 connection selected"
+        : `${store.state.multipleConnectionsSelectedIds.length} connections selected`;
         store.commit("addNotification", {
           message: message,
           type: "info",
