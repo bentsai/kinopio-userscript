@@ -4,11 +4,6 @@ A userscript for experimenting with Kinopio interactions
 
 ## Main features:
 
-### Keyboard shortcuts
-
-- Hide UI chrome with keyboard shortcut `d` (useful for presentations)
-- 'l' to toggle viewing cards as a list (wonky because of perf optimization)
-
 ### Auto-resizing lists
 
 Boxes with a background fill have an auto-tidying list behavior.
@@ -31,7 +26,3 @@ Boxes with an empty background have an auto-expand behavior.
 
 When you create a new card by hitting Enter on an existing card, the new card now inherits
 the size of the existing card.
-
-### Fixes
-
-- Fixes cursor when resizing boxes (https://club.kinopio.club/t/boxes-resize-cursor-should-be-nwse-cursor/1004)

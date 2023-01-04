@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kinopio
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      2.0
 // @description  experiment with new kinopio interactions
 // @author       You
 // @match        https://kinopio.club/*
@@ -9,62 +9,21 @@
 // @grant        none
 // ==/UserScript==
 
+// 2.0 changelog
+// - Remove box resizing cursor (this is built-in now)
+// - Only try resizing boxes in spaces I'm a collaborator in
+// - Remove `d` shortcut for toggling chrome (now built-in as `p`)
+
 (function () {
   "use strict";
 
   let cssOverridesEl = document.createElement("style");
   cssOverridesEl.id = "css-overrides";
   cssOverridesEl.type = "text/css";
-  cssOverridesEl.innerHTML = `
-    .box .bottom-button-wrap .resize-button-wrap {
-      cursor: nwse-resize;
-    }
-    .box .bottom-button-wrap .resize-button-wrap button {
-      cursor: nwse-resize;
-    }`;
-
-  let cardsAsListCssStyleEl = document.createElement("style");
-  cardsAsListCssStyleEl.id = "cards-as-list";
-  cardsAsListCssStyleEl.type = "text/css";
-  cardsAsListCssStyleEl.innerHTML = `
-    article {
-      position: static;
-      padding: 5px;
-      margin-left: 300px;
-      max-width: 600px;
-    }
-  
-    article .card {
-      max-width: none;
-    }
-  
-    .card-overlap-indicator {
-      display: none;
-    }`;
-
-  let toggleCardsAsList = () => {
-    let style = document.getElementById("cards-as-list");
-    if (style) {
-      style.remove();
-      return;
-    }
-    let head = document.getElementsByTagName("head")[0];
-    if (!head) return;
-    head.appendChild(cardsAsListCssStyleEl);
-  };
-
-  let toggleChrome = () => {
-    const display =
-      document.querySelector("header").style.display === "none" ? "" : "none";
-    document.querySelector("header").style.display = display;
-    document.querySelector("footer").style.display = display;
-    document.querySelector(".footer-wrap").style.display = display;
-  };
+  cssOverridesEl.innerHTML = ``;
 
   document.body.addEventListener("keydown", (e) => {
     if (document.querySelector("dialog[open]")) return;
-    if (e.key === "d") toggleChrome();
-    if (e.key === "l") toggleCardsAsList();
   });
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -223,6 +182,13 @@
     }, 50);
 
     let resizeBoxes = (card) => {
+      if (store.state.currentSpace.userId !== store.state.currentUser.id &&
+        !store.state.currentSpace.collaborators.includes(
+          store.state.currentUser.id
+        )
+      ) {
+        return;
+      }
       if (!card) return;
 
       Object.values(store.state.currentBoxes.boxes).forEach((box) => {
@@ -363,6 +329,17 @@
       console.log("🎴", e.type, e.detail.card.id);
       resizeBoxes(e.detail.card);
     });
+
+    /*
+    document.addEventListener("cardEditStarted", (e) => {
+      console.log("🎴", e.type, e.detail.card.id);
+      let message = `[x: ${e.detail.card.x}, y: ${e.detail.card.y}, w: ${e.detail.card.width}, h: ${e.detail.card.height}]`;
+      store.commit("addNotification", {
+        message: message,
+        type: "info",
+      });
+    });
+    */
 
     document.addEventListener("cardEditEnded", (e) => {
       console.log("🎴", e.type, e.detail.card.id);
